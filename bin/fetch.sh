@@ -33,7 +33,7 @@ if [ "$MANAGE_WIFI" = "1" ]; then
     sleep "$WIFI_WAIT_SECONDS"
 fi
 
-api_url="https://api.open-meteo.com/v1/forecast?latitude=$LATITUDE&longitude=$LONGITUDE&current=temperature_2m,apparent_temperature,weather_code,wind_speed_10m&hourly=temperature_2m,weather_code,precipitation_probability&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&temperature_unit=$TEMPERATURE_UNIT&wind_speed_unit=$WIND_SPEED_UNIT&precipitation_unit=$PRECIPITATION_UNIT&timezone=$TIMEZONE&forecast_days=$FORECAST_DAYS&forecast_hours=$HOURLY_FORECAST_COUNT"
+api_url="https://api.open-meteo.com/v1/forecast?latitude=$LATITUDE&longitude=$LONGITUDE&current=temperature_2m,apparent_temperature,weather_code,wind_speed_10m&hourly=temperature_2m,weather_code,precipitation_probability&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&temperature_unit=$TEMPERATURE_UNIT&wind_speed_unit=$WIND_SPEED_UNIT&precipitation_unit=$PRECIPITATION_UNIT&timezone=$TIMEZONE&forecast_days=$FORECAST_DAYS&forecast_hours=$((HOURLY_FORECAST_COUNT + 1))"
 
 fetch_ok=0
 if command -v curl >/dev/null 2>&1; then
@@ -53,7 +53,7 @@ fi
 if [ -n "$QUOTE_URL" ] && command -v curl >/dev/null 2>&1; then
     if curl -fsS --connect-timeout 15 --max-time "$NETWORK_TIMEOUT_SECONDS" \
         "$QUOTE_URL" -o "$tmp_quote" && [ -s "$tmp_quote" ]; then
-        sed -n '1,2p' "$tmp_quote" > "$QUOTE_CACHE"
+        mv "$tmp_quote" "$QUOTE_CACHE"
         log_message "Quote updated"
     fi
 fi

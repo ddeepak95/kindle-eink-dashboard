@@ -12,32 +12,41 @@
     main { display:grid; place-items:center; padding:28px; }
     .screen { container-type:inline-size; position:relative; width:min(92vw,1000px); aspect-ratio:1448/1072; overflow:hidden; background:#fafaf7; padding:2.4cqw 3.6cqw 1.5cqw; box-shadow:0 20px 70px #000c; }
     .masthead { display:flex; justify-content:space-between; align-items:baseline; text-transform:uppercase; }
-    .place { font-size:2.4cqw; font-weight:700; letter-spacing:.13em; }
-    .date { font-size:2cqw; letter-spacing:.04em; }
+    .place { font-size:2.8cqw; font-weight:700; letter-spacing:.13em; }
+    .date { font-size:2.3cqw; letter-spacing:.04em; }
     .rule { height:.28cqw; background:#111; margin-top:1.7cqw; }
     .hero { height:25.3cqw; display:grid; grid-template-columns:52% 1px 1fr; align-items:center; gap:2.5cqw; }
     .current { display:grid; grid-template-columns:14cqw 1fr; align-items:center; }
     .current .icon { width:13cqw; height:13cqw; }
-    .temperature { font-size:8.7cqw; font-weight:700; line-height:.9; white-space:nowrap; }
-    .condition { margin-top:1.5cqw; font-size:2.9cqw; }
-    .submetric { margin-top:1.9cqw; font-size:1.9cqw; white-space:nowrap; }
+    .temperature { font-size:10cqw; font-weight:700; line-height:.9; white-space:nowrap; }
+    .condition { margin-top:1.5cqw; font-size:3.2cqw; }
+    .submetric { margin-top:1.9cqw; font-size:2.2cqw; line-height:1.35; }
     .divider { height:20.5cqw; background:#111; }
-    .today h2,.hourly h2 { margin:0; font-size:1.8cqw; letter-spacing:.12em; }
-    .highlow { margin-top:1.5cqw; font-size:4.7cqw; font-weight:700; }
-    .label { margin-top:.3cqw; font-size:1.55cqw; letter-spacing:.06em; }
-    .rain { margin-top:2.4cqw; font-size:2.35cqw; font-weight:700; }
+    .today h2,.hourly h2 { margin:0; font-size:2.2cqw; letter-spacing:.12em; }
+    .highlow { margin-top:1.5cqw; font-size:5.3cqw; font-weight:700; }
+    .label { margin-top:.3cqw; font-size:1.9cqw; letter-spacing:.06em; }
+    .rain { margin-top:2.4cqw; font-size:2.8cqw; font-weight:700; }
     .hourly { padding-top:1.3cqw; }
-    .hours { display:grid; grid-template-columns:repeat(6,1fr); margin-top:1.5cqw; }
+    .hours { display:grid; grid-template-columns:repeat(var(--periods,6),minmax(0,1fr)); margin-top:1.5cqw; }
     .hour { min-width:0; text-align:center; border-right:1px solid #777; padding:0 1cqw; }
     .hour:last-child { border-right:0; }
-    .time { font-size:1.75cqw; font-weight:700; }
+    .time { font-size:2cqw; font-weight:700; }
     .hour .icon { width:5.7cqw; height:5.7cqw; margin:1.1cqw auto .65cqw; }
-    .hour-temp { font-size:2.55cqw; font-weight:700; }
-    .hour-rain { margin-top:.55cqw; font-size:1.55cqw; }
+    .hour-temp { font-size:2.8cqw; font-weight:700; }
+    .hour-rain { margin-top:.55cqw; font-size:1.9cqw; }
+    .hour.event { border-top:.35cqw solid #111; background:#e8e8e3; }
+    .hour-condition { font-size:1.7cqw; min-height:2.3cqw; margin-top:.5cqw; font-weight:700; }
+    .hours.compact { row-gap:.8cqw; }
+    .compact .hour { display:grid; grid-template-columns:3cqw 1fr; align-items:center; column-gap:.3cqw; }
+    .compact .time,.compact .hour-condition,.compact .hour-rain { grid-column:1 / -1; }
+    .compact .hour .icon { width:3cqw; height:3cqw; margin:.2cqw 0; }
+    .compact .hour-temp { font-size:2.3cqw; }
+    .compact .hour-condition { font-size:1.5cqw; min-height:0; margin:0; }
+    .compact .hour-rain { margin:.2cqw 0 0; font-size:1.6cqw; }
     .footer-rule { margin-top:1.55cqw; }
-    .quote { margin:1.5cqw 5cqw 0; text-align:center; font-size:1.95cqw; line-height:1.35; }
-    .quote footer { margin-top:.5cqw; font-size:1.6cqw; }
-    .updated { position:absolute; left:3.6cqw; right:3.6cqw; bottom:1.15cqw; text-align:center; font-size:1.35cqw; }
+    .quote { margin:1.5cqw 5cqw 0; text-align:center; font-size:2.5cqw; line-height:1.35; }
+    .quote footer { margin-top:.5cqw; font-size:2cqw; }
+    .updated { position:absolute; left:3.6cqw; right:3.6cqw; bottom:1.15cqw; text-align:center; font-size:1.65cqw; }
     .icon svg { display:block; width:100%; height:100%; fill:none; stroke:#111; stroke-width:7; stroke-linecap:round; stroke-linejoin:round; }
     body.capture { background:#fafaf7; } body.capture .toolbar { display:none; } body.capture main { display:block; padding:0; }
     body.capture .screen { width:1448px; height:1072px; box-shadow:none; }
@@ -54,13 +63,13 @@
       <div class="today"><h2>TODAY</h2><div class="highlow"><span id="high">--</span>&deg; / <span id="low">--</span>&deg;</div><div class="label">HIGH / LOW, DEGREES F</div><div class="rain" id="todayRain">--% rain</div></div>
     </section>
     <div class="rule" style="margin-top:0"></div>
-    <section class="hourly"><h2>NEXT SIX HOURS</h2><div class="hours" id="hours"></div></section>
+    <section class="hourly"><h2>NEXT 12 HOURS</h2><div class="hours" id="hours"></div></section>
     <div class="rule footer-rule"></div>
-    <blockquote class="quote">"Attention is the beginning of devotion."<footer>- Mary Oliver</footer></blockquote>
+    <blockquote class="quote" id="quote">"Attention is the beginning of devotion."<footer>- Mary Oliver</footer></blockquote>
     <div class="updated" id="updated">Waiting for weather</div>
   </section></main>
   <script>
-    const api='https://api.open-meteo.com/v1/forecast?latitude=42.44063&longitude=-76.49661&current=temperature_2m,apparent_temperature,weather_code,wind_speed_10m&hourly=temperature_2m,weather_code,precipitation_probability&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch&timezone=America%2FNew_York&forecast_days=4&forecast_hours=6';
+    const api='https://api.open-meteo.com/v1/forecast?latitude=42.44063&longitude=-76.49661&current=temperature_2m,apparent_temperature,weather_code,wind_speed_10m&hourly=temperature_2m,weather_code,precipitation_probability&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch&timezone=America%2FNew_York&forecast_days=4&forecast_hours=13';
     const descriptions={0:'Clear sky',1:'Mostly clear',2:'Partly cloudy',3:'Overcast',45:'Fog',48:'Fog',51:'Drizzle',53:'Drizzle',55:'Drizzle',56:'Freezing drizzle',57:'Freezing drizzle',61:'Rain',63:'Rain',65:'Rain',66:'Freezing rain',67:'Freezing rain',71:'Snow',73:'Snow',75:'Snow',77:'Snow',80:'Rain showers',81:'Rain showers',82:'Rain showers',85:'Snow showers',86:'Snow showers',95:'Thunderstorms',96:'Storms with hail',99:'Storms with hail'};
     const $=id=>document.getElementById(id), round=Math.round;
     function icon(code){
@@ -72,17 +81,60 @@
       if([51,53,55,56,57,61,63,65,66,67,80,81,82].includes(code))return '<svg viewBox="0 0 128 128"><path d="M27 82h72c14 0 22-9 22-21s-10-21-22-21C92 25 81 16 66 16 47 16 33 29 30 47 16 48 8 56 8 67s8 15 19 15Z"/><path d="M36 95l-7 18M66 95l-7 18M96 95l-7 18"/></svg>';
       return '<svg viewBox="0 0 128 128"><path d="M31 99h65c16 0 25-10 25-23s-10-23-24-23c-5-17-18-27-35-27-21 0-36 14-39 34C13 63 7 70 7 80c0 11 9 19 24 19Z"/></svg>';
     }
-    const hourLabel=t=>new Intl.DateTimeFormat('en-US',{hour:'numeric'}).format(new Date(t));
+    // API timestamps are already Ithaca wall time; do not reinterpret in the browser timezone.
+    const hourLabel=t=>{const h=Number(t.slice(11,13));return (h%12||12)+' '+(h<12?'AM':'PM');};
+    const periodLabel=(a,b)=>a===b?hourLabel(a):
+      (hourLabel(a).split(' ')[1]===hourLabel(b).split(' ')[1]?hourLabel(a).split(' ')[0]:hourLabel(a))+'\u2013'+hourLabel(b);
+    function groupHours(hourly) {
+      const groups=[];
+      // Request the current hour plus 12 future hours; omit the current hour.
+      hourly.time.slice(1,13).forEach((time,index)=>{
+        const i=index+1;
+        const temp=hourly.temperature_2m[i],code=hourly.weather_code[i],rain=hourly.precipitation_probability[i];
+        if(![temp,code,rain].every(Number.isFinite)) return;
+        const key=code<=1?0:code, last=groups[groups.length-1];
+        if(last && last.endIndex===i-1 && last.key===key &&
+           Math.max(last.max,temp)-Math.min(last.min,temp)<=3 &&
+           Math.max(last.rain,rain)-Math.min(last.minRain,rain)<=20 && (last.rain>=50)===(rain>=50)) {
+          last.end=time;last.endIndex=i;last.min=Math.min(last.min,temp);last.max=Math.max(last.max,temp);
+          last.rain=Math.max(last.rain,rain);last.minRain=Math.min(last.minRain,rain);
+        } else groups.push({start:time,end:time,endIndex:i,min:temp,max:temp,code,key,rain,minRain:rain});
+      });
+      return groups;
+    }
+    const quoteUrl='https://raw.githubusercontent.com/ddeepak95/kindle-eink-dashboard/main/data/quotes.txt';
+    function showQuote(source) {
+      const lines=source.split(/\r?\n/).map(s=>s.trim()).filter(s=>s.includes('|'));
+      if(!lines.length) throw Error('No quotes available');
+      const today=new Intl.DateTimeFormat('en-CA',{timeZone:'America/New_York',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
+      const day=Math.floor((Date.parse(today+'T00:00:00Z')-Date.parse(today.slice(0,4)+'-01-01T00:00:00Z'))/86400000);
+      const line=lines[day%lines.length], split=line.indexOf('|'), footer=document.createElement('footer');
+      $('quote').textContent='\u201c'+line.slice(0,split)+'\u201d';footer.textContent='\u2014 '+line.slice(split+1);$('quote').append(footer);
+    }
+    async function refreshQuote() {
+      try {const cached=localStorage.getItem('dashboard-quotes');if(cached)showQuote(cached);} catch {}
+      try {
+        const response=await fetch(quoteUrl,{cache:'no-store'});if(!response.ok)throw Error('Quote request failed');
+        const source=await response.text();showQuote(source);
+        try {localStorage.setItem('dashboard-quotes',source);} catch {}
+      } catch { /* Keep the cached or bundled quote when offline. */ }
+    }
     async function refresh(){
       try { const response=await fetch(api,{cache:'no-store'}); if(!response.ok)throw Error(`Weather request failed (${response.status})`); const d=await response.json(),c=d.current,x=d.daily;
         $('date').textContent=new Intl.DateTimeFormat('en-US',{weekday:'long',month:'long',day:'numeric'}).format(new Date(c.time));
         $('temperature').innerHTML=`${round(c.temperature_2m)}&deg;`; $('condition').textContent=descriptions[c.weather_code]||'Conditions unavailable'; $('currentIcon').innerHTML=icon(c.weather_code);
         $('feels').innerHTML=`Feels ${round(c.apparent_temperature)}&deg;`; $('wind').textContent=`Wind ${round(c.wind_speed_10m)} mph`; $('high').textContent=round(x.temperature_2m_max[0]); $('low').textContent=round(x.temperature_2m_min[0]); $('todayRain').textContent=`${round(x.precipitation_probability_max[0])}% rain`;
-        $('hours').innerHTML=d.hourly.time.slice(0,6).map((t,i)=>`<div class="hour"><div class="time">${hourLabel(t)}</div><div class="icon">${icon(d.hourly.weather_code[i])}</div><div class="hour-temp">${round(d.hourly.temperature_2m[i])}&deg;</div><div class="hour-rain">Rain ${round(d.hourly.precipitation_probability[i])}%</div></div>`).join('');
+        const groups=groupHours(d.hourly);
+        $('hours').style.setProperty('--periods',Math.max(1,groups.length>6?Math.ceil(groups.length/2):groups.length));
+        $('hours').classList.toggle('compact',groups.length>6);
+        $('hours').innerHTML=groups.map(g=>{
+          const temperatures=round(g.min)===round(g.max)?round(g.min):round(g.min)+'\u2013'+round(g.max);
+          return `<div class="hour ${g.code>=51?'event':''}"><div class="time">${periodLabel(g.start,g.end)}</div><div class="icon">${icon(g.code)}</div><div class="hour-temp">${temperatures}&deg;</div><div class="hour-condition">${descriptions[g.code]||'Unknown'}</div><div class="hour-rain">Rain ${round(g.rain)}%</div></div>`;
+        }).join('');
         $('updated').textContent=`Updated ${c.time.replace('T',' ')}`;
       } catch(e) { $('condition').textContent='Preview unavailable'; $('updated').textContent=e.message; }
     }
-    if(new URLSearchParams(location.search).has('capture'))document.body.classList.add('capture'); $('refresh').onclick=refresh; refresh();
+    if(new URLSearchParams(location.search).has('capture'))document.body.classList.add('capture'); $('refresh').onclick=()=>{refresh();refreshQuote();}; refresh();refreshQuote();
   </script>
 </body>
 </html>

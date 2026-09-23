@@ -20,16 +20,17 @@ today_rain=$(round_number "$(daily_array_value precipitation_probability_max 1)"
 
 quote=""; author=""
 if [ "$SHOW_QUOTE" = "1" ]; then
-    if [ -s "$QUOTE_CACHE" ]; then
-        quote=$(sed -n '1p' "$QUOTE_CACHE"); author=$(sed -n '2p' "$QUOTE_CACHE")
-    elif [ -s "$EXTENSION_DIR/data/quotes.txt" ]; then
-        day=$(date +%j | sed 's/^0*//'); [ -n "$day" ] || day=1
-        count=$(wc -l < "$EXTENSION_DIR/data/quotes.txt" | tr -d ' ')
-        quote_line=$(sed -n "$((day % count + 1))p" "$EXTENSION_DIR/data/quotes.txt")
-        quote=${quote_line%%|*}; author=${quote_line#*|}
+    quote_source="$EXTENSION_DIR/data/quotes.txt"
+    if [ -n "$QUOTE_URL" ] && [ -s "$QUOTE_CACHE" ]; then quote_source="$QUOTE_CACHE"; fi
+    if [ -s "$quote_source" ]; then
+        selected=$(select_quote "$quote_source")
+        quote=$(printf '%s\n' "$selected" | sed -n '1p')
+        author=$(printf '%s\n' "$selected" | sed -n '2p')
     fi
 fi
 
+groups=$(forecast_groups)
+group_count=$(printf '%s\n' "$groups" | awk 'NF {n++} END {print n+0}')
 header=$(date '+%A, %B %d')
 icons="$EXTENSION_DIR/assets/icons"
 
@@ -46,44 +47,61 @@ text_box() {
 
 render_truetype() {
     "$FBINK" -q -b --cls
-    text_box 35 34 988 52 1040 BOLD "$LOCATION_NAME"
-    text_box 29 41 992 1000 48 REGULAR "$header"
+    text_box 41 34 988 52 1040 BOLD "$LOCATION_NAME"
+    text_box 33 41 980 800 48 REGULAR "$header"
     draw_rule 101 52 1344 4
 
     draw_icon "$code" 72 154 185 || true
-    text_box 126 130 742 260 730 BOLD "${temp} degrees"
-    text_box 42 305 690 280 690 REGULAR "$condition"
-    text_box 28 374 650 280 690 REGULAR "Feels ${feels} degrees  |  Wind ${wind} ${wind_unit}"
+    text_box 145 130 742 260 730 BOLD "${temp}°"
+    text_box 46 305 690 280 690 REGULAR "$condition"
+    text_box 32 371 600 280 690 REGULAR "Feels ${feels}° | Wind ${wind} ${wind_unit}"
 
     draw_rule 137 795 4 302
-    text_box 26 143 880 830 55 BOLD "TODAY"
-    text_box 68 186 710 830 55 BOLD "${today_high} / ${today_low}"
-    text_box 26 287 680 830 55 REGULAR "HIGH / LOW, degrees ${unit}"
-    text_box 34 350 615 830 55 BOLD "${today_rain}% rain"
+    text_box 32 143 880 830 55 BOLD "TODAY"
+    text_box 77 186 710 830 55 BOLD "${today_high} / ${today_low}"
+    text_box 29 287 680 830 55 REGULAR "HIGH / LOW, degrees ${unit}"
+    text_box 40 350 615 830 55 BOLD "${today_rain}% rain"
 
     draw_rule 469 52 1344 4
-    text_box 27 491 520 52 1050 BOLD "NEXT SIX HOURS"
-    i=1
-    while [ "$i" -le "$HOURLY_FORECAST_COUNT" ]; do
-        hour_time=$(hourly_array_value time "$i"); [ -n "$hour_time" ] || break
-        hour_temp=$(round_number "$(hourly_array_value temperature_2m "$i")")
-        hour_code=$(round_number "$(hourly_array_value weather_code "$i")")
-        hour_rain=$(round_number "$(hourly_array_value precipitation_probability "$i")")
-        left=$((52 + (i - 1) * 224)); right=$((1448 - left - 192)); icon_x=$((left + 56))
-        text_box 25 545 482 "$left" "$right" BOLD "$(hour_label "$hour_time")"
-        draw_icon "$hour_code" "$icon_x" 594 80 || true
-        text_box 38 688 293 "$left" "$right" BOLD "${hour_temp} degrees"
-        text_box 23 752 247 "$left" "$right" REGULAR "Rain ${hour_rain}%"
-        [ "$i" -ge "$HOURLY_FORECAST_COUNT" ] || draw_rule 546 $((left + 208)) 2 257
-        i=$((i + 1))
-    done
-
+    text_box 32 488 530 52 700 BOLD "NEXT $HOURLY_FORECAST_COUNT HOURS"
+    i=0
+    if [ "$group_count" -gt 0 ]; then
+        printf '%s\n' "$groups" | while IFS='|' read -r first last low high hour_code hour_rain; do
+            columns=$group_count
+            [ "$group_count" -le 6 ] || columns=$(((group_count + 1) / 2))
+            width=$((1344 / columns))
+            if [ "$group_count" -gt 6 ]; then
+                left=$((52 + (i % columns) * width)); right=$((1448 - left - width + 20))
+                top=$((539 + (i / columns) * 140))
+                text_box 29 "$top" $((1072 - top - 38)) "$left" "$right" BOLD "$(period_label "$first" "$last")"
+                draw_icon "$hour_code" "$left" $((top + 38)) 40 || true
+                temperatures="$low"; [ "$low" = "$high" ] || temperatures="$low-$high"
+                text_box 32 $((top + 38)) $((1072 - top - 78)) $((left + 46)) "$right" BOLD "$temperatures"
+                text_box 23 $((top + 78)) $((1072 - top - 108)) "$left" "$right" BOLD "$(weather_description "$hour_code")"
+                text_box 24 $((top + 108)) $((1072 - top - 140)) "$left" "$right" REGULAR "Rain $hour_rain%"
+                [ "$hour_code" -lt 51 ] || draw_rule $((top + 137)) "$left" $((width - 20)) 3
+                i=$((i + 1))
+                continue
+            fi
+            left=$((52 + i * width)); right=$((1448 - left - width + 20)); icon_x=$((left + width / 2 - 40))
+            text_box 29 539 481 "$left" "$right" BOLD "$(period_label "$first" "$last")"
+            draw_icon "$hour_code" "$icon_x" 584 80 || true
+            temperatures="$low"; [ "$low" = "$high" ] || temperatures="$low-$high"
+            text_box 40 674 337 "$left" "$right" BOLD "$temperatures"
+            text_box 25 732 274 "$left" "$right" BOLD "$(weather_description "$hour_code")"
+            text_box 27 783 239 "$left" "$right" REGULAR "Rain $hour_rain%"
+            # Thick underline calls attention to rain, snow and storms on e-ink.
+            [ "$hour_code" -lt 51 ] || draw_rule 818 "$left" $((width - 20)) 5
+            i=$((i + 1))
+            [ "$i" -ge "$group_count" ] || draw_rule 546 $((left + width - 10)) 2 257
+        done
+    fi
     draw_rule 825 52 1344 4
     if [ -n "$quote" ]; then
         quote_block=$(printf '"%s"\n- %s' "$quote" "$author")
-        "$FBINK" -q -b -m --truetype "regular=$FONT_REGULAR,bold=$FONT_BOLD,px=29,top=852,bottom=80,left=120,right=120" "$quote_block" || log_message "Quote rendering failed"
+        "$FBINK" -q -b -m --truetype "regular=$FONT_REGULAR,bold=$FONT_BOLD,px=35,top=845,bottom=65,left=85,right=85" "$quote_block" || log_message "Quote rendering failed"
     fi
-    text_box 21 1022 22 52 52 REGULAR "Updated $updated"
+    text_box 25 1022 12 52 52 REGULAR "Updated $updated"
     "$FBINK" -q -f --refresh
 }
 
@@ -92,14 +110,13 @@ render_bitmap() {
     "$FBINK" -q -b -m -S 3 -y 1 "$LOCATION_NAME  |  $header"
     "$FBINK" -q -b -m -S 6 -y 4 "${temp} ${unit}  $condition"
     "$FBINK" -q -b -m -S 2 -y 12 "Feels ${feels}  High ${today_high}  Low ${today_low}  Rain ${today_rain}%  Wind ${wind} ${wind_unit}"
-    "$FBINK" -q -b -m -S 2 -y 18 "NEXT SIX HOURS"
-    i=1
-    while [ "$i" -le "$HOURLY_FORECAST_COUNT" ]; do
-        hour_time=$(hourly_array_value time "$i"); [ -n "$hour_time" ] || break
-        hour_temp=$(round_number "$(hourly_array_value temperature_2m "$i")")
-        hour_code=$(round_number "$(hourly_array_value weather_code "$i")")
-        hour_rain=$(round_number "$(hourly_array_value precipitation_probability "$i")")
-        "$FBINK" -q -b -S 1 -x 2 -y $((21 + i * 3)) "$(hour_label "$hour_time")  ${hour_temp} ${unit}  $(weather_description "$hour_code")  Rain ${hour_rain}%"
+    "$FBINK" -q -b -m -S 2 -y 18 "NEXT $HOURLY_FORECAST_COUNT HOURS"
+    i=0
+    printf '%s\n' "$groups" | while IFS='|' read -r first last low high hour_code hour_rain; do
+        [ -n "$first" ] || continue
+        temperatures="$low"; [ "$low" = "$high" ] || temperatures="$low-$high"
+        marker=""; [ "$hour_code" -lt 51 ] || marker="! "
+        "$FBINK" -q -b -S 2 -x 2 -y $((22 + i * 2)) "$marker$(period_label "$first" "$last")  $temperatures $unit  $(weather_description "$hour_code")  $hour_rain%"
         i=$((i + 1))
     done
     [ -z "$quote" ] || "$FBINK" -q -b -m -S 1 -y -7 "\"$quote\"  - $author"

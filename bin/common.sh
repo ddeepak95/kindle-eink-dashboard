@@ -253,3 +253,52 @@ wind_suffix() {
         *) printf '%s' "mph" ;;
     esac
 }
+
+# Rotate a quote list daily; retain support for a two-line quote/author file.
+select_quote() {
+    awk -v day="$(date +%j)" '
+        { sub(/\r$/, "") }
+        NF { lines[++n]=$0; if (index($0, "|")) quotes[++q]=$0 }
+        END {
+            if (q) {
+                line=quotes[(day+0-1)%q+1]; split_at=index(line, "|")
+                print substr(line, 1, split_at-1); print substr(line, split_at+1)
+            } else if (n) { print lines[1]; print lines[2] }
+        }' "$1"
+}
+
+# Adjacent hours merge only if their full temperature span is <= 3 degrees.
+# Preserve weather-code changes (including rain intensity), except clear/mostly clear.
+# A 20-point rain-chance span or crossing 50% also starts a new period.
+forecast_groups() {
+    (
+        # The API includes the current hour; display only the following hours.
+        i=2
+        while [ "$i" -le "$((HOURLY_FORECAST_COUNT + 1))" ]; do
+            t=$(hourly_array_value time "$i"); [ -n "$t" ] || break
+            printf '%s|%s|%s|%s\n' "$t" "$(hourly_array_value temperature_2m "$i")" "$(hourly_array_value weather_code "$i")" "$(hourly_array_value precipitation_probability "$i")"
+            i=$((i+1))
+        done
+    ) | awk -F '|' '
+        function emit() { if (n) printf "%s|%s|%.0f|%.0f|%s|%s\n", start, finish, low, high, code, rain }
+        function minimum(a,b) { return a<b?a:b }
+        function maximum(a,b) { return a>b?a:b }
+        $2 !~ /^-?[0-9]+([.][0-9]+)?$/ || $3 !~ /^[0-9]+$/ || $4 !~ /^[0-9]+$/ { emit(); n=0; next }
+        {
+            category=($3<=1?0:$3)
+            if (!n || category!=previous || maximum(high,$2)-minimum(low,$2)>3 ||
+                maximum(rain,$4)-minimum(minrain,$4)>20 || ($4>=50)!=(rain>=50)) {
+                emit(); start=$1; low=$2+0; high=$2+0; code=$3; rain=$4+0; minrain=$4+0; n=0
+            }
+            finish=$1; low=minimum(low,$2); high=maximum(high,$2)
+            rain=maximum(rain,$4); minrain=minimum(minrain,$4); previous=category; n++
+        }
+        END { emit() }'
+}
+
+period_label() {
+    first=$(hour_label "$1"); last=$(hour_label "$2")
+    if [ "$1" = "$2" ]; then printf '%s' "$first"
+    elif [ "${first#* }" = "${last#* }" ]; then printf '%s-%s' "${first%% *}" "$last"
+    else printf '%s-%s' "$first" "$last"; fi
+}

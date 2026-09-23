@@ -1,16 +1,16 @@
 # Dashboard for KUAL
 
 A landscape dashboard for a jailbroken Kindle Paperwhite 3 / 7th
-generation (1448 x 1072). It fetches current conditions, daily values, and a six-hour forecast from Open-Meteo,
+generation (1448 x 1072). It fetches current conditions, daily values, and a 12-hour forecast from Open-Meteo,
 renders directly to the framebuffer with FBInk, and keeps the last successful
 response for offline use.
 
 ## What this first version includes
 
 - Current temperature, conditions, apparent temperature, wind, and rain chance
-- A six-column hourly forecast with monochrome condition icons
+- A 12-hour forecast grouped into similar periods, with prominent rain/snow/storm changes
 - Today high/low, rain chance, apparent temperature, and wind
-- A daily local quote, or an optional two-line quote fetched from a URL
+- Daily quotes fetched from GitHub, with cached and bundled offline fallbacks
 - Five-minute request throttling and offline cache fallback
 - A large-type editorial layout with a bitmap-font fallback
 - KUAL actions for normal display and forced refresh
@@ -81,10 +81,12 @@ Edit `data/quotes.txt` to customize the bundled rotation. Each line uses:
 Quote text|Author
 ```
 
-To host the quote in a public GitHub repository, point `QUOTE_URL` in
-`config.sh` to a `raw.githubusercontent.com` text file containing the quote on
-line 1 and author on line 2. If that request fails, the most recently cached
-quote remains available.
+Both the preview and Kindle fetch
+https://raw.githubusercontent.com/ddeepak95/kindle-eink-dashboard/main/data/quotes.txt
+by default. Edit that file in GitHub to update the daily rotation. Failed requests
+preserve the last downloaded quotes; a bundled quote remains available before the
+first successful download. The Kindle also accepts a custom two-line quote/author
+file through QUOTE_URL. Set QUOTE_URL="" to use only bundled quotes on the Kindle.
 
 Set `SHOW_QUOTE="0"` for a weather-only dashboard.
 
@@ -108,3 +110,17 @@ blank screen.
 - **Small/blocky type:** the installed FBInk build lacks OpenType support or the
   configured Kindle fonts were not found, so the safe bitmap fallback was used.
 - Review `cache/dashboard.log` for fetch and render events.
+
+## Forecast grouping
+
+Adjacent hours share a period when their weather codes match (clear and mostly
+clear may merge), the entire temperature range is at most 3 degrees, and rain
+probability varies by at most 20 percentage points without crossing 50%.
+Rain intensity changes, rain starting/stopping, snow and storms create separate
+periods. Each period shows the temperature range and highest rain probability.
+The next 12 forecast hours start at the next full hour, excluding the current hour,
+with precipitation emphasized (for example, at 1:30 PM: 2 PM through 1 AM).
+
+Run node tests/dashboard.test.cjs to check preview/Kindle grouping parity and
+quote parsing. These checks require Bash (Git for Windows is supported).
+When more than six distinct periods remain, the forecast uses two rows.

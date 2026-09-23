@@ -13,7 +13,7 @@ PRECIPITATION_UNIT="inch"
 
 # Number of daily rows requested. The renderer uses today plus three days.
 FORECAST_DAYS="4"
-HOURLY_FORECAST_COUNT="6"
+HOURLY_FORECAST_COUNT="12"
 
 # Avoid repeated downloads when Show Dashboard is tapped several times.
 MIN_REFRESH_SECONDS="300"
@@ -31,9 +31,9 @@ WIFI_WAIT_SECONDS="10"
 # Set to 0 for a weather-only screen.
 SHOW_QUOTE="1"
 
-# Optional plain-text URL. Line 1 is the quote; line 2 is the author.
+# GitHub quote list: Quote text|Author per line (two-line files also supported).
 # Leave blank to rotate through data/quotes.txt once per day.
-QUOTE_URL=""
+QUOTE_URL="https://raw.githubusercontent.com/ddeepak95/kindle-eink-dashboard/main/data/quotes.txt"
 
 # Optional FBInk override. When blank, common KUAL/FBInk paths are searched.
 FBINK_PATH=""
