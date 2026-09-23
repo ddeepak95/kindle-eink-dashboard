@@ -65,7 +65,7 @@
     <div class="rule" style="margin-top:0"></div>
     <section class="hourly"><h2>NEXT 12 HOURS</h2><div class="hours" id="hours"></div></section>
     <div class="rule footer-rule"></div>
-    <blockquote class="quote" id="quote">"Attention is the beginning of devotion."<footer>- Mary Oliver</footer></blockquote>
+    <blockquote class="quote" id="quote">"Do the thing, and you shall have the Power."<footer>- Ralph Waldo Emerson, Compensation</footer></blockquote>
     <div class="updated" id="updated">Waiting for weather</div>
   </section></main>
   <script>
@@ -102,6 +102,9 @@
       });
       return groups;
     }
+    // BEGIN BUNDLED QUOTES
+    const bundledQuotes="Do the thing, and you shall have the Power.|Ralph Waldo Emerson, Compensation\nI'm not afraid of storms, for I'm learning how to sail my ship.|Louisa May Alcott, Little Women\nTo strive, to seek, to find, and not to yield.|Alfred Tennyson, Ulysses\nNothing great was ever achieved without enthusiasm.|Ralph Waldo Emerson, Circles\nI am the master of my fate: I am the captain of my soul.|William Ernest Henley, Invictus\nStill achieving, still pursuing, Learn to labor and to wait.|Henry Wadsworth Longfellow, A Psalm of Life\nTrust thyself: every heart vibrates to that iron string.|Ralph Waldo Emerson, Self-Reliance\n'Tis not too late to seek a newer world.|Alfred Tennyson, Ulysses\nLet us, then, be up and doing, With a heart for any fate;|Henry Wadsworth Longfellow, A Psalm of Life\nFor all your days prepare, And meet them ever alike:|Edwin Markham, Preparedness\n";
+    // END BUNDLED QUOTES
     const quoteUrl='https://raw.githubusercontent.com/ddeepak95/kindle-eink-dashboard/main/data/quotes.txt';
     function showQuote(source) {
       const lines=source.split(/\r?\n/).map(s=>s.trim()).filter(s=>s.includes('|'));
@@ -112,6 +115,9 @@
       $('quote').textContent='\u201c'+line.slice(0,split)+'\u201d';footer.textContent='\u2014 '+line.slice(split+1);$('quote').append(footer);
     }
     async function refreshQuote() {
+      // A file preview cannot fetch sibling text files in most browsers.
+      // Use its bundled snapshot before consulting remote data or browser caches.
+      if(location.protocol==='file:') {showQuote(bundledQuotes);return;}
       try {const cached=localStorage.getItem('dashboard-quotes');if(cached)showQuote(cached);} catch {}
       try {
         const response=await fetch(quoteUrl,{cache:'no-store'});if(!response.ok)throw Error('Quote request failed');

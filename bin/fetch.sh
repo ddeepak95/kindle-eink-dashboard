@@ -58,6 +58,10 @@ if [ -n "$QUOTE_URL" ] && command -v curl >/dev/null 2>&1; then
     fi
 fi
 
+# Reuse the current Wi-Fi session; offline/update failures never block weather.
+. "$SCRIPT_DIR/updates.sh"
+check_layout_update || log_message "Layout update check failed"
+
 if [ "$fetch_ok" = "1" ]; then
     exit 0
 fi

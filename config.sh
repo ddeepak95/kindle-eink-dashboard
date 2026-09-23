@@ -44,3 +44,8 @@ FBDEPTH_PATH=""
 # Paperwhite system fonts used by FBInk's OpenType renderer.
 FONT_REGULAR="/usr/java/lib/fonts/Caecilia_LT_65_Medium.ttf"
 FONT_BOLD="/usr/java/lib/fonts/Caecilia_LT_75_Bold.ttf"
+
+# Download versioned layouts during weather refresh; 0 uses the bundled layout.
+AUTO_UPDATE_LAYOUT="1"
+LAYOUT_UPDATE_URL="https://raw.githubusercontent.com/ddeepak95/kindle-eink-dashboard/main/updates"
+LAYOUT_RENDER_TIMEOUT_SECONDS="45"

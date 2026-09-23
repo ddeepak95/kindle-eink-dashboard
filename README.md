@@ -73,9 +73,14 @@ Open `preview.html` in a desktop browser. It renders a 1448 x 1072 PW3 landscape
 and fetches the same live Ithaca forecast used by the Kindle. This preview is
 for development only and does not need to be copied to the Kindle.
 
+When opened as a file:// URL, the preview uses its embedded quote snapshot so
+unpublished local quotes are visible. After editing layout/quotes.txt, run
+node tools/sync-quotes.cjs and reload the browser. This also updates data/quotes.txt.
+When hosted over HTTP(S), the preview continues fetching quotes from GitHub.
+
 ## Quotes
 
-Edit `data/quotes.txt` to customize the bundled rotation. Each line uses:
+Edit `layout/quotes.txt` to customize the bundled rotation. Each line uses:
 
 ```text
 Quote text|Author
@@ -124,3 +129,46 @@ with precipitation emphasized (for example, at 1:30 PM: 2 PM through 1 AM).
 Run node tests/dashboard.test.cjs to check preview/Kindle grouping parity and
 quote parsing. These checks require Bash (Git for Windows is supported).
 When more than six distinct periods remain, the forecast uses two rows.
+
+## GitHub layout updates
+
+Install this updated dashboard folder on the Kindle once, including the new
+layout/ directory and bin/updates.sh and bin/render-layout.sh. Keep your location
+and font settings in config.sh. Subsequent layout releases arrive over Wi-Fi.
+
+During each network weather refresh (normally each hourly wake), the Kindle reads
+updates/latest.txt from GitHub. Repeated requests served by the five-minute
+weather cache also skip this check. A new version downloads into a staging folder,
+checks all nine SHA-256 hashes and shell syntax, then waits for rendering.
+It becomes active only after the renderer exits successfully. Failed rendering
+or a timeout restores the active layout, its previous version, or the installed
+bundle. Offline requests leave the current layout intact. Failed render versions
+are not retried until a different version is published.
+
+To publish a layout:
+1. Edit layout/render.sh, layout/icons/*.png, and/or layout/quotes.txt locally.
+2. Run: node tools/release-layout.cjs 3 (choose a new positive version each time).
+3. Commit and push updates/latest.txt and the generated updates/releases/3/
+   directory together to the main branch of ddeepak95/kindle-eink-dashboard.
+   Commit the editable layout sources too so they stay in sync.
+
+Release 2 includes the current motivating quote selection. Nothing is published by the packaging
+command. Existing release directories cannot be overwritten; publish corrections
+under a new version. Updating preview.html alone changes the desktop preview,
+not the Kindle renderer.
+
+The controller downloads only the fixed list of rendering assets, leaving local
+configuration, weather helpers, the updater, and sleep/wake scripts installed.
+The renderer remains shell code executed with the Kindle dashboard's permissions:
+the configured GitHub repository is trusted code, and checksums detect damaged
+downloads, not malicious repository changes. Updates require curl and sha256sum.
+Successful exit detects execution failures, not visual layout mistakes.
+
+Set AUTO_UPDATE_LAYOUT="0" to disable remote layouts and render the installed
+bundle. LAYOUT_RENDER_TIMEOUT_SECONDS defaults to 45 seconds. Cached releases and
+active/pending/previous/rejected version markers live in cache/layout-updates/.
+Events are recorded in cache/dashboard.log. Cached releases are retained locally.
+
+Run node tests/updates.test.cjs for mocked network/update/rollback checks, and
+node tests/dashboard.test.cjs for forecast and quote regressions. Both require
+Bash. Before relying on automatic updates, test a release on the physical Kindle.

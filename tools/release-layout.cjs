@@ -1,0 +1,20 @@
+const fs = require('node:fs');
+const path = require('node:path');
+const crypto = require('node:crypto');
+const root = path.resolve(__dirname, '..');
+const version = process.argv[2];
+if (!/^[1-9][0-9]{0,8}$/.test(version || '')) throw Error('Usage: node tools/release-layout.cjs <positive version number>');
+const destination = path.join(root, 'updates', 'releases', version);
+if (fs.existsSync(destination)) throw Error('Release already exists; use a new version number.');
+const files = ['render.sh','quotes.txt', ...['clear','cloudy','fog','partly-cloudy','rain','snow','storm'].map(name=>'icons/'+name+'.png')];
+const assets = files.map(file => {
+  let data = fs.readFileSync(path.join(root, 'layout', file));
+  if (!file.endsWith('.png')) data = Buffer.from(data.toString('utf8').replace(/\r\n/g, '\n'));
+  if (!data.length) throw Error('Empty release file: '+file);
+  return {file,data,hash:crypto.createHash('sha256').update(data).digest('hex')};
+});
+fs.mkdirSync(path.join(destination,'icons'),{recursive:true});
+for (const {file,data} of assets) fs.writeFileSync(path.join(destination,file),data);
+fs.writeFileSync(path.join(destination,'manifest.sha256'),assets.map(({file,hash})=>hash+'  '+file+'\n').join(''));
+fs.writeFileSync(path.join(root,'updates','latest.txt'),version+'\n');
+console.log('Prepared layout '+version+'. Commit and push updates/ to publish.');
