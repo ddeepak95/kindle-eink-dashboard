@@ -1,0 +1,31 @@
+{
+  "items": [
+    {
+      "name": "Dashboard",
+      "priority": 10,
+      "items": [
+        {
+          "name": "Start Dashboard (Sleep + Auto Refresh)",
+          "priority": 10,
+          "action": "./bin/start.sh"
+        },
+        {
+          "name": "Run 10-Minute Sleep Test",
+          "priority": 20,
+          "action": "./bin/start.sh",
+          "params": "600"
+        },
+        {
+          "name": "Refresh Landscape Once",
+          "priority": 30,
+          "action": "./bin/refresh.sh"
+        },
+        {
+          "name": "Stop Dashboard / Return Home",
+          "priority": 40,
+          "action": "./bin/stop.sh"
+        }
+      ]
+    }
+  ]
+}

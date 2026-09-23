@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dashboard Preview - Ithaca</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin:0; min-height:100vh; background:#252525; color:#111; font-family:Georgia,"Times New Roman",serif; }
+    .toolbar { height:58px; display:flex; align-items:center; justify-content:space-between; padding:0 20px; background:#151515; color:#eee; font-family:system-ui,sans-serif; }
+    .toolbar small { color:#aaa; margin-left:10px; } button { padding:9px 14px; font-weight:700; border:0; border-radius:4px; }
+    main { display:grid; place-items:center; padding:28px; }
+    .screen { container-type:inline-size; position:relative; width:min(92vw,1000px); aspect-ratio:1448/1072; overflow:hidden; background:#fafaf7; padding:2.4cqw 3.6cqw 1.5cqw; box-shadow:0 20px 70px #000c; }
+    .masthead { display:flex; justify-content:space-between; align-items:baseline; text-transform:uppercase; }
+    .place { font-size:2.4cqw; font-weight:700; letter-spacing:.13em; }
+    .date { font-size:2cqw; letter-spacing:.04em; }
+    .rule { height:.28cqw; background:#111; margin-top:1.7cqw; }
+    .hero { height:25.3cqw; display:grid; grid-template-columns:52% 1px 1fr; align-items:center; gap:2.5cqw; }
+    .current { display:grid; grid-template-columns:14cqw 1fr; align-items:center; }
+    .current .icon { width:13cqw; height:13cqw; }
+    .temperature { font-size:8.7cqw; font-weight:700; line-height:.9; white-space:nowrap; }
+    .condition { margin-top:1.5cqw; font-size:2.9cqw; }
+    .submetric { margin-top:1.9cqw; font-size:1.9cqw; white-space:nowrap; }
+    .divider { height:20.5cqw; background:#111; }
+    .today h2,.hourly h2 { margin:0; font-size:1.8cqw; letter-spacing:.12em; }
+    .highlow { margin-top:1.5cqw; font-size:4.7cqw; font-weight:700; }
+    .label { margin-top:.3cqw; font-size:1.55cqw; letter-spacing:.06em; }
+    .rain { margin-top:2.4cqw; font-size:2.35cqw; font-weight:700; }
+    .hourly { padding-top:1.3cqw; }
+    .hours { display:grid; grid-template-columns:repeat(6,1fr); margin-top:1.5cqw; }
+    .hour { min-width:0; text-align:center; border-right:1px solid #777; padding:0 1cqw; }
+    .hour:last-child { border-right:0; }
+    .time { font-size:1.75cqw; font-weight:700; }
+    .hour .icon { width:5.7cqw; height:5.7cqw; margin:1.1cqw auto .65cqw; }
+    .hour-temp { font-size:2.55cqw; font-weight:700; }
+    .hour-rain { margin-top:.55cqw; font-size:1.55cqw; }
+    .footer-rule { margin-top:1.55cqw; }
+    .quote { margin:1.5cqw 5cqw 0; text-align:center; font-size:1.95cqw; line-height:1.35; }
+    .quote footer { margin-top:.5cqw; font-size:1.6cqw; }
+    .updated { position:absolute; left:3.6cqw; right:3.6cqw; bottom:1.15cqw; text-align:center; font-size:1.35cqw; }
+    .icon svg { display:block; width:100%; height:100%; fill:none; stroke:#111; stroke-width:7; stroke-linecap:round; stroke-linejoin:round; }
+    body.capture { background:#fafaf7; } body.capture .toolbar { display:none; } body.capture main { display:block; padding:0; }
+    body.capture .screen { width:1448px; height:1072px; box-shadow:none; }
+  </style>
+</head>
+<body>
+  <div class="toolbar"><div><strong>PW3 LANDSCAPE PREVIEW</strong><small>1448 x 1072 - live Ithaca forecast</small></div><button id="refresh">Refresh</button></div>
+  <main><section class="screen">
+    <header class="masthead"><div class="place">Ithaca</div><div class="date" id="date">Loading forecast</div></header>
+    <div class="rule"></div>
+    <section class="hero">
+      <div class="current"><div class="icon" id="currentIcon"></div><div><div class="temperature" id="temperature">--&deg;</div><div class="condition" id="condition">Connecting...</div><div class="submetric"><span id="feels">Feels --&deg;</span>&nbsp;&nbsp;|&nbsp;&nbsp;<span id="wind">Wind -- mph</span></div></div></div>
+      <div class="divider"></div>
+      <div class="today"><h2>TODAY</h2><div class="highlow"><span id="high">--</span>&deg; / <span id="low">--</span>&deg;</div><div class="label">HIGH / LOW, DEGREES F</div><div class="rain" id="todayRain">--% rain</div></div>
+    </section>
+    <div class="rule" style="margin-top:0"></div>
+    <section class="hourly"><h2>NEXT SIX HOURS</h2><div class="hours" id="hours"></div></section>
+    <div class="rule footer-rule"></div>
+    <blockquote class="quote">"Attention is the beginning of devotion."<footer>- Mary Oliver</footer></blockquote>
+    <div class="updated" id="updated">Waiting for weather</div>
+  </section></main>
+  <script>
+    const api='https://api.open-meteo.com/v1/forecast?latitude=42.44063&longitude=-76.49661&current=temperature_2m,apparent_temperature,weather_code,wind_speed_10m&hourly=temperature_2m,weather_code,precipitation_probability&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch&timezone=America%2FNew_York&forecast_days=4&forecast_hours=6';
+    const descriptions={0:'Clear sky',1:'Mostly clear',2:'Partly cloudy',3:'Overcast',45:'Fog',48:'Fog',51:'Drizzle',53:'Drizzle',55:'Drizzle',56:'Freezing drizzle',57:'Freezing drizzle',61:'Rain',63:'Rain',65:'Rain',66:'Freezing rain',67:'Freezing rain',71:'Snow',73:'Snow',75:'Snow',77:'Snow',80:'Rain showers',81:'Rain showers',82:'Rain showers',85:'Snow showers',86:'Snow showers',95:'Thunderstorms',96:'Storms with hail',99:'Storms with hail'};
+    const $=id=>document.getElementById(id), round=Math.round;
+    function icon(code){
+      if(code<=1)return '<svg viewBox="0 0 128 128"><circle cx="64" cy="64" r="25"/><path d="M64 8v13M64 107v13M8 64h13M107 64h13M24 24l10 10M94 94l10 10M104 24L94 34M34 94l-10 10"/></svg>';
+      if(code===2)return '<svg viewBox="0 0 128 128"><circle cx="45" cy="43" r="21"/><path d="M45 7v9M15 15l7 7M8 43h10M72 16l-7 7M30 105h67c14 0 23-9 23-21s-9-21-22-21c-5-15-17-24-32-24-19 0-33 13-36 31-10 2-17 9-17 18 0 10 8 17 17 17Z" fill="#fafaf7"/></svg>';
+      if([45,48].includes(code))return '<svg viewBox="0 0 128 128"><path d="M27 70h72c14 0 22-9 22-21S112 28 99 28C94 13 81 6 66 6 47 6 33 19 30 37 16 38 8 46 8 57s8 13 19 13Z"/><path d="M16 89h96M29 108h70"/></svg>';
+      if([71,73,75,77,85,86].includes(code))return '<svg viewBox="0 0 128 128"><path d="M27 76h72c14 0 22-9 22-21s-9-21-22-21C94 19 81 10 66 10 47 10 33 23 30 41 16 42 8 50 8 61s8 15 19 15Z"/><path d="M36 92v28M24 99l24 14M48 99l-24 14M86 92v28M74 99l24 14M98 99l-24 14"/></svg>';
+      if(code>=95)return '<svg viewBox="0 0 128 128"><path d="M27 75h72c14 0 22-9 22-21s-9-21-22-21C94 18 81 9 66 9 47 9 33 22 30 40 16 41 8 49 8 60s8 15 19 15Z"/><path d="M63 83 46 108h17l-4 14 25-29H66l7-10" fill="#111"/></svg>';
+      if([51,53,55,56,57,61,63,65,66,67,80,81,82].includes(code))return '<svg viewBox="0 0 128 128"><path d="M27 82h72c14 0 22-9 22-21s-10-21-22-21C92 25 81 16 66 16 47 16 33 29 30 47 16 48 8 56 8 67s8 15 19 15Z"/><path d="M36 95l-7 18M66 95l-7 18M96 95l-7 18"/></svg>';
+      return '<svg viewBox="0 0 128 128"><path d="M31 99h65c16 0 25-10 25-23s-10-23-24-23c-5-17-18-27-35-27-21 0-36 14-39 34C13 63 7 70 7 80c0 11 9 19 24 19Z"/></svg>';
+    }
+    const hourLabel=t=>new Intl.DateTimeFormat('en-US',{hour:'numeric'}).format(new Date(t));
+    async function refresh(){
+      try { const response=await fetch(api,{cache:'no-store'}); if(!response.ok)throw Error(`Weather request failed (${response.status})`); const d=await response.json(),c=d.current,x=d.daily;
+        $('date').textContent=new Intl.DateTimeFormat('en-US',{weekday:'long',month:'long',day:'numeric'}).format(new Date(c.time));
+        $('temperature').innerHTML=`${round(c.temperature_2m)}&deg;`; $('condition').textContent=descriptions[c.weather_code]||'Conditions unavailable'; $('currentIcon').innerHTML=icon(c.weather_code);
+        $('feels').innerHTML=`Feels ${round(c.apparent_temperature)}&deg;`; $('wind').textContent=`Wind ${round(c.wind_speed_10m)} mph`; $('high').textContent=round(x.temperature_2m_max[0]); $('low').textContent=round(x.temperature_2m_min[0]); $('todayRain').textContent=`${round(x.precipitation_probability_max[0])}% rain`;
+        $('hours').innerHTML=d.hourly.time.slice(0,6).map((t,i)=>`<div class="hour"><div class="time">${hourLabel(t)}</div><div class="icon">${icon(d.hourly.weather_code[i])}</div><div class="hour-temp">${round(d.hourly.temperature_2m[i])}&deg;</div><div class="hour-rain">Rain ${round(d.hourly.precipitation_probability[i])}%</div></div>`).join('');
+        $('updated').textContent=`Updated ${c.time.replace('T',' ')}`;
+      } catch(e) { $('condition').textContent='Preview unavailable'; $('updated').textContent=e.message; }
+    }
+    if(new URLSearchParams(location.search).has('capture'))document.body.classList.add('capture'); $('refresh').onclick=refresh; refresh();
+  </script>
+</body>
+</html>
